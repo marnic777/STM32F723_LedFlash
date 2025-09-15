@@ -1,0 +1,30 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+[Dd]ebug*/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+_build/
+build/
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+log_file.txt
+.metadata/
+.mxproject
+.settings/
+project.ioc
+mx.scratch
+
+# Visual Studio cache files
+# files ending in .cache can be ignored
+*.[Cc]ache
+# but keep track of directories ending in .cache
+!*.[Cc]ache/
