@@ -47,6 +47,9 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/st7789h2.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/lcd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/psram.c
     # Add user sources here
 )
 
@@ -65,4 +68,11 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
 
     # Add user defined libraries
+)
+
+# Add custom commands to generate .bin and .hex files
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_PROJECT_NAME}.bin
+	COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_PROJECT_NAME}.hex
+	COMMENT "Building ${CMAKE_PROJECT_NAME}.bin and ${CMAKE_PROJECT_NAME}.hex"
 )

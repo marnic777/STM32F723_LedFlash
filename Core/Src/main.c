@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "gpio.h"
+#include "lcd.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -53,7 +54,8 @@ void PeriphCommonClock_Config(void);
 void MX_USB_HOST_Process(void);
 
 /* USER CODE BEGIN PFP */
-
+static void CPU_CACHE_Enable(void);
+static void MPU_ConfigPSRAM(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -69,6 +71,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  /* Configure the MPU attributes for PSRAM external memory */
+  MPU_ConfigPSRAM();
+  
+  /* Enable the CPU Cache */
+  CPU_CACHE_Enable();
 
   /* USER CODE END 1 */
 
@@ -78,7 +85,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  
+  
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -94,6 +102,15 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+/* Configure LCD */
+  LCD_Init();
+  LCD_SetFont(&Font16);
+
+  /* Clear the Background Layer */
+  LCD_Clear(LCD_COLOR_BLACK);
+  LCD_SetBackColor(LCD_COLOR_BLACK);
+  LCD_SetTextColor(LCD_COLOR_YELLOW);
+  LCD_DisplayStringAt(0, LCD_GetYSize() - 40, (uint8_t *)"  MARNIC  ", CENTER_MODE);
 
   /* USER CODE END 2 */
 
@@ -191,6 +208,117 @@ void PeriphCommonClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/**
+  * @brief  Configure the MPU attributes as Write Back for PSRAM mapped on FMC
+  *         BANK1/BANK2. This function configures two regions.
+  * @note   The Base Address is 0x64000000 (for Display purposes) and 
+  *         0x60000000 (for Audio Record module).
+  *         The Region Size is 512KB, it is related to PSRAM memory size.
+  * @param  None
+  * @retval None
+  */
+static void MPU_ConfigPSRAM(void)
+{
+  MPU_Region_InitTypeDef MPU_InitStruct;
+  
+  /* Disable the MPU */
+  HAL_MPU_Disable();
+  
+  /* Configure the MPU as Strongly ordered for not defined regions */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.BaseAddress = 0x00;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.SubRegionDisable = 0x87;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /* Configure the MPU attributes for PSRAM with recommended configurations:
+     Write-back, write and read allocate */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.BaseAddress = 0x60000000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_1MB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER1;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
+  MPU_InitStruct.SubRegionDisable = 0x00;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  
+  /* Configure the MPU attributes for TFT-LCD with recommended configurations:
+     Normal, non cacheable (Display purposes) */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.BaseAddress = 0x64000000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_512KB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER2;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
+  MPU_InitStruct.SubRegionDisable = 0x00;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  
+  /* Configure the MPU QSPI flash */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.BaseAddress = 0x90000000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_64MB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER3;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  
+  /* Configure the MPU attributes FMC control registers */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.BaseAddress = 0xA0000000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_8KB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER4;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+  
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  
+  /* Enable the MPU */
+  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
+}
+
+/**
+  * @brief  CPU L1-Cache enable.
+  * @param  None
+  * @retval None
+  */
+static void CPU_CACHE_Enable(void)
+{
+  /* Enable I-Cache */
+  SCB_EnableICache();
+
+  /* Enable D-Cache */
+  SCB_EnableDCache();
+}
 
 /* USER CODE END 4 */
 
