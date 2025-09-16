@@ -2,25 +2,31 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cortex-debug",
+            "name": "Debug (STM32F723IE)",
             "type": "cortex-debug",
             "request": "launch",
-            "cwd": "${workspaceRoot}/build",
-            "executable": "${workspaceRoot}/build/${workspaceFolderBasename}",
-            "servertype": "openocd",
-            "interface": "swd",
+            "servertype": "stlink",
+            "cwd": "${workspaceFolder}",
+            "executable": "${command:st-stm32-ide-debug-launch.get-projects-binary-from-context1}",
             "device": "STM32F723IE",
-            "runToMain": true,
-            "preRestartCommands": [
-                "target remote localhost:3333",
-                "add-symbol-file ${workspaceFolderBasename}",
-                "enable breakpoint",
-                "monitor reset"
-            ],
-            "armToolchainPath": "/usr/local/gcc-arm-none-eabi-9-2020-q2-update/bin",
-            "configFiles": ["/usr/local/share/openocd/scripts/board/st_nucleo_f4.cfg"],
-            "searchDir":["/usr/local/share/openocd/scripts/board/"],
-            "svdFile": "${workspaceFolder}/etc/STM32F723.svd",
-            "preLaunchTask": "build"
-        }]
+            "svdFile": "C:/ST/STM32CubeCLT_1.18.0/STMicroelectronics_CMSIS_SVD/Core/STM32F723.svd",
+            "runToEntryPoint": "main",
+            "armToolchainPath": "C:/ST/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin/"
+        }
+    ],
+    "runToEntryPoint": "main",
+    "preLaunchTask": "Build All Debug",
+    "showDevDebugOutput": "raw",
+    "swoConfig": {
+        "enabled": true,
+        "source": "socket",
+        "swoFrequency": 2000000,
+        "cpuFrequency": 260000000,
+        "decoders": [
+            {
+                "port": 0,
+                "type": "console"
+            }
+        ]
+    }
 }
