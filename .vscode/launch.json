@@ -9,7 +9,7 @@
             "executable": "${workspaceRoot}/build/${workspaceFolderBasename}",
             "servertype": "openocd",
             "interface": "swd",
-            "device": "STM32F723E",
+            "device": "STM32F723IE",
             "runToMain": true,
             "preRestartCommands": [
                 "target remote localhost:3333",
